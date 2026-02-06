@@ -1,4 +1,4 @@
-name: Deploy Drupal
+name: Deploy Drupal to EC2
 
 on:
   push:
@@ -9,29 +9,112 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      # =============================
+      # Checkout repository
+      # =============================
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: aws-actions/configure-aws-credentials@v4
+
+      # =============================
+      # Configure AWS (GitHub runner)
+      # =============================
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
-      - run: |
-          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
-      - run: |
+      # =============================
+      # Login to ECR
+      # =============================
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region ap-south-1 | \
+          docker login --username AWS --password-stdin \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+
+
+      # =============================
+      # Build Docker image
+      # =============================
+      - name: Build image
+        run: |
           docker build -t drupal-app -f docker/php/Dockerfile .
-          docker tag drupal-app:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/drupal-app:latest
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/drupal-app:latest
 
-      - uses: appleboy/ssh-action@v1
+
+      # =============================
+      # Tag + Push image to ECR
+      # =============================
+      - name: Push image to ECR
+        run: |
+          docker tag drupal-app:latest \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+
+          docker push \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+
+
+      # =============================
+      # Deploy on EC2
+      # =============================
+      - name: Deploy on EC2 via SSH
+        uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
+
           script: |
-            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/drupal-app:latest
-            docker compose down
+
+            echo "🚀 Starting deployment on EC2"
+
+            # -----------------------------
+            # Start docker service
+            # -----------------------------
+            sudo systemctl start docker || true
+
+
+            # -----------------------------
+            # Pass AWS credentials to EC2
+            # -----------------------------
+            export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+            export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            export AWS_DEFAULT_REGION=ap-south-1
+
+
+            # -----------------------------
+            # Login to ECR from EC2
+            # -----------------------------
+            aws ecr get-login-password --region ap-south-1 | \
+            docker login --username AWS --password-stdin \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+
+
+            # -----------------------------
+            # Clone repo first time only
+            # -----------------------------
+            if [ ! -d "$HOME/app" ]; then
+              git clone https://github.com/${{ github.repository }} $HOME/app
+            fi
+
+            cd $HOME/app
+
+
+            # -----------------------------
+            # Pull latest image
+            # -----------------------------
+            docker pull \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+
+
+            # -----------------------------
+            # Restart containers
+            # -----------------------------
+            docker compose down || true
             docker compose up -d
 
+
+            echo "✅ Deployment finished successfully"
