@@ -2,9 +2,12 @@ version: "3.9"
 
 services:
   php:
-    image: 946952788082.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
     container_name: drupal-php
-    restart: always
+    volumes:
+      - .:/var/www/html
     environment:
       DB_HOST: db
       DB_NAME: drupal
@@ -16,10 +19,10 @@ services:
   nginx:
     image: nginx:1.25-alpine
     container_name: drupal-nginx
-    restart: always
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
+      - .:/var/www/html
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - php
@@ -27,7 +30,6 @@ services:
   db:
     image: mariadb:10.6
     container_name: drupal-db
-    restart: always
     environment:
       MYSQL_DATABASE: drupal
       MYSQL_USER: drupal
