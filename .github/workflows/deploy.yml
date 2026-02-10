@@ -41,4 +41,4 @@ jobs:
       - name: Trigger Auto Scaling refresh
         run: |
           aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name himmat-auto-scale
+            --auto-scaling-group-name himmat-autoscale
