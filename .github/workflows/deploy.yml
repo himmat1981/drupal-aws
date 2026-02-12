@@ -32,7 +32,7 @@ jobs:
           docker tag drupal-app:latest \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
 
-      - name: Push Image
+      - name: Push Image1
         run: |
           docker push \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
