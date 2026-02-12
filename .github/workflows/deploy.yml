@@ -37,7 +37,17 @@ jobs:
           docker push \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
 
-      - name: Refresh Auto Scaling
+      - name: Trigger Auto Scaling refresh
         run: |
-          aws autoscaling start-instance-refresh \
-            --auto-scaling-group-name himmat-autoscale
+          STATUS=$(aws autoscaling describe-instance-refreshes \
+            --auto-scaling-group-name himmat-autoscale \
+            --query 'InstanceRefreshes[0].Status' \
+            --output text)
+
+          if [ "$STATUS" = "InProgress" ]; then
+            echo "Instance refresh already running. Skipping."
+          else
+            aws autoscaling start-instance-refresh \
+              --auto-scaling-group-name himmat-autoscale
+          fi
+
