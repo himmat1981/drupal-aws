@@ -1,4 +1,4 @@
-name: Deploy Drupal
+name: Deploy Drupal EC2
 
 on:
   push:
@@ -17,37 +17,40 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-south-1
 
+      # Login ECR
       - name: Login to ECR
         run: |
           aws ecr get-login-password --region ap-south-1 | \
           docker login --username AWS --password-stdin \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
 
+      # Build image
       - name: Build Image
         run: |
-          docker build -t drupal-app -f docker/php/Dockerfile .
+          docker build -t drupal-app:latest -f docker/php/Dockerfile .
 
+      # Tag
       - name: Tag Image
         run: |
           docker tag drupal-app:latest \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
 
-      - name: Push Image1
+      # Push
+      - name: Push Image
         run: |
           docker push \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
 
-      - name: Trigger Auto Scaling refresh
-        run: |
-          STATUS=$(aws autoscaling describe-instance-refreshes \
-            --auto-scaling-group-name himmat-autoscale \
-            --query 'InstanceRefreshes[0].Status' \
-            --output text)
-
-          if [ "$STATUS" = "InProgress" ]; then
-            echo "Instance refresh already running. Skipping."
-          else
-            aws autoscaling start-instance-refresh \
-              --auto-scaling-group-name himmat-autoscale
-          fi
-
+      # SSH Deploy to EC2
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+            docker stop drupal || true
+            docker rm drupal || true
+            docker run -d --name drupal -p 80:80 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
