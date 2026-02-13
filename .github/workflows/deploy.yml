@@ -41,7 +41,7 @@ jobs:
           docker push \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
 
-      # SSH Deploy to EC2
+      # SSH Deploy to EC21
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
