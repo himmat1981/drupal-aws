@@ -1,0 +1,9 @@
+chatbot:
+  css:
+    theme:
+      css/chatbot.css: {}
+  js:
+    js/chatbot.js: {}
+  dependencies:
+    - core/drupal
+    - core/once

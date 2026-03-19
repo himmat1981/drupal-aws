@@ -1,0 +1,20 @@
+vector_search.test:
+  path: '/vector-test'
+  defaults:
+    _controller: '\Drupal\vector_search\Controller\TestController::test'
+    _title: 'Vector Test'
+  requirements:
+    _permission: 'access content'
+vector_search.chat:
+  path: '/chatbot-api'
+  defaults:
+    _controller: '\Drupal\vector_search\Controller\ChatController::chat'
+  requirements:
+    _permission: 'access content'
+vector_search.chat_api:
+  path: '/vector-search/chat'
+  defaults:
+    _controller: '\Drupal\vector_search\Controller\ChatController::chat'
+  methods: [POST]
+  requirements:
+    _permission: 'access content'

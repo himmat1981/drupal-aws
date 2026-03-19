@@ -17,8 +17,6 @@ $kernel = new DrupalKernel('prod', $autoloader);
 
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);
-echo "<h3>Served by21: " . gethostname() . "</h3>";
-
 $response->send();
 
 $kernel->terminate($request, $response);
