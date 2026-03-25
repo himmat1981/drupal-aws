@@ -12,12 +12,16 @@ def get_client() -> Groq:
     return _client
 
 
-def chat(messages: list, max_tokens: int = 1024, temperature: float = 0.7) -> str:
-    """Send messages to Groq LLM and return the response text."""
-    response = get_client().chat.completions.create(
-        model=LLM_MODEL,
-        messages=messages,
-        max_tokens=max_tokens,
-        temperature=temperature,
-    )
-    return response.choices[0].message.content
+def chat(messages: list, max_tokens: int = 1024, temperature: float = 0.3) -> str:
+    try:
+        response = get_client().chat.completions.create(
+            model=LLM_MODEL,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+        return response.choices[0].message.content.strip()
+
+    except Exception as e:
+        print(f"❌ LLM Error: {e}")
+        return "LLM_ERROR"

@@ -10,7 +10,8 @@ function vector_search_entity_insert(EntityInterface $entity) {
     return;
   }
   _ai_vector_send_to_python($entity);
-  _ai_vector_generate_seo($entity);
+  _ai_vector_queue_seo($entity);
+  _ai_vector_queue_governance($entity);        // ← adds to queue — instant
 }
 
 /**
@@ -21,20 +22,27 @@ function vector_search_entity_update(EntityInterface $entity) {
     return;
   }
   _ai_vector_send_to_python($entity);
-  _ai_vector_generate_seo($entity);
+  //_ai_vector_generate_seo($entity);
 }
 
-/**
- * Send node to Python API for vector storage.
- * Your original function — unchanged.
- */
 function _ai_vector_send_to_python(EntityInterface $entity) {
   if (!$entity->hasField('body')) {
     return;
   }
 
+  // Get real body content
+  $content = '';
+  if (!$entity->get('body')->isEmpty()) {
+    $content = strip_tags($entity->get('body')->value);
+  }
+
+  // Don't store if content is empty
+  if (empty($content)) {
+    return;
+  }
+
   try {
-    $client = \Drupal::httpClient();
+    $client   = \Drupal::httpClient();
     $response = $client->post('http://vector-api:8000/nodes/store', [
       'headers' => [
         'Content-Type' => 'application/json',
@@ -43,17 +51,23 @@ function _ai_vector_send_to_python(EntityInterface $entity) {
       'json' => [
         'node_id' => (int) $entity->id(),
         'title'   => (string) $entity->label(),
-        'content' => 'test',
+        'content' => $content,   // ← REAL CONTENT NOW
       ],
       'timeout'     => 20,
-      'http_errors' => FALSE,  // 👈 VERY IMPORTANT
+      'http_errors' => FALSE,
     ]);
 
     $body = $response->getBody()->getContents();
-    \Drupal::logger('vector_api')->notice('Response: @res', ['@res' => $body]);
+    \Drupal::logger('vector_search')->notice(
+      'Vector store response for node @id: @res',
+      ['@id' => $entity->id(), '@res' => $body]
+    );
   }
   catch (\Exception $e) {
-    \Drupal::logger('vector_api')->error($e->getMessage());
+    \Drupal::logger('vector_search')->error(
+      'Vector store failed for node @id: @error',
+      ['@id' => $entity->id(), '@error' => $e->getMessage()]
+    );
   }
 }
 
@@ -156,4 +170,74 @@ function _ai_vector_generate_seo(EntityInterface $entity) {
       ['@id' => $node_id, '@error' => $e->getMessage()]
     );
   }
+}
+
+function _ai_vector_queue_seo(EntityInterface $entity) {
+
+ 
+  
+
+  $queue = \Drupal::queue('nlp_summary_queue');
+
+  $queue->createItem([
+    'nid' => $entity->id(),
+    'title'   => $entity->label(),
+    'content' => strip_tags($entity->get('body')->value),
+  ]);
+
+
+  return;
+}
+
+/**
+ * Implements hook_entity_presave().
+ */
+function vector_search_entity_presave(\Drupal\Core\Entity\EntityInterface $entity) {
+
+  if ($entity->getEntityTypeId() !== 'node') {
+    return;
+  }
+
+  if (!$entity->hasField('body')) {
+    return;
+  }
+
+  $content = $entity->get('body')->value;
+
+  if (empty($content)) {
+    return;
+  }
+
+  $client = \Drupal::httpClient();
+
+  try {
+    // 🔹 Moderate
+    $response = $client->post('http://vector-api:8000/nlp/moderate', [
+      'json' => ['text' => $content],
+    ]);
+
+    $moderation = json_decode($response->getBody(), TRUE);
+
+    if ($moderation['score'] > 0.8) {
+      \Drupal::messenger()->addWarning('Content may be toxic!');
+    }
+
+  } catch (\Exception $e) {
+    \Drupal::logger('mymodule')->error($e->getMessage());
+  }
+}
+
+function _ai_vector_queue_governance(EntityInterface $entity) {
+
+  if (!$entity->hasField('body') || $entity->get('body')->isEmpty()) {
+    return;
+  }
+
+  $queue = \Drupal::queue('ai_governance_queue');
+
+  $queue->createItem([
+    'nid'     => $entity->id(),
+    'title'   => $entity->label(),
+    'content' => strip_tags($entity->get('body')->value),
+  ]);
 }

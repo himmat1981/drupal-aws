@@ -37,15 +37,40 @@ def ensure_tables():
                 );
             """)
 
-            # SEO cache — avoid regenerating tags every time
+            # SEO cache
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS seo_cache (
-                    id          SERIAL PRIMARY KEY,
-                    node_id     INTEGER UNIQUE,
-                    meta_title  TEXT,
-                    meta_desc   TEXT,
-                    keywords    TEXT,
+                    id           SERIAL PRIMARY KEY,
+                    node_id      INTEGER UNIQUE,
+                    meta_title   TEXT,
+                    meta_desc    TEXT,
+                    keywords     TEXT,
                     generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+
+            # ── NEW: Summary cache ────────────────────────────
+            # Stores AI generated summaries
+            # Same node never summarized twice — zero cost on repeat
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS summary_cache (
+                    id           SERIAL PRIMARY KEY,
+                    node_id      INTEGER UNIQUE,
+                    summary      TEXT,
+                    generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+
+            # ── NEW: LoRA training log ────────────────────────
+            # Tracks when LoRA was trained and on how many nodes
+            # Useful for knowing when to retrain
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS lora_training_log (
+                    id            SERIAL PRIMARY KEY,
+                    nodes_trained INTEGER,
+                    base_model    TEXT,
+                    adapter_path  TEXT,
+                    trained_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """)
 

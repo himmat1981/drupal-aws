@@ -1,7 +1,7 @@
 import psycopg2.extras
 from typing import List
 from db.connection import get_conn
-
+from services.embeddings import encode  # your existing embedding service
 
 def store_node_vector(node_id: int, title: str, content: str, embedding: list):
     """Save a Drupal node with its vector embedding."""
@@ -84,3 +84,13 @@ def get_seo_cache(node_id: int):
             """, (node_id,))
             row = cur.fetchone()
             return dict(row) if row else None
+        
+def search_similar_content(content: str, top_k: int = 3):
+
+    # 🔥 Step 1: Convert text → embedding
+    query_vector = encode(content)
+
+    # 🔥 Step 2: Search similar
+    results = search_similar(query_vector, top_k)
+
+    return results

@@ -5,6 +5,10 @@ from db.connection import ensure_tables
 from routers.nodes import router as nodes_router
 from routers.chatbot import router as chatbot_router
 from routers.seo import router as seo_router
+from routers.nlp import router as nlp_router
+from routers import governance
+
+
 
 # ── Create app ────────────────────────────────────────────────
 app = FastAPI(
@@ -31,7 +35,8 @@ def on_startup():
 app.include_router(nodes_router)
 app.include_router(chatbot_router)
 app.include_router(seo_router)
-
+app.include_router(nlp_router)
+app.include_router(governance.router)
 # ── Health check ──────────────────────────────────────────────
 @app.get("/")
 def root():

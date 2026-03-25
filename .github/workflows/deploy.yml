@@ -1,4 +1,4 @@
-name: Deploy Drupal EC2
+name: Deploy Drupal + Python API to EC2
 
 on:
   push:
@@ -9,48 +9,83 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout code
       - uses: actions/checkout@v4
 
+      # 2. Configure AWS
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-access-key-id:     ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
+          aws-region:            ap-south-1
 
-      # Login ECR
+      # 3. Login to ECR
       - name: Login to ECR
         run: |
           aws ecr get-login-password --region ap-south-1 | \
           docker login --username AWS --password-stdin \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
 
-      # Build image
-      - name: Build Image
+      # 4. Build Drupal image
+      - name: Build Drupal image
         run: |
           docker build -t drupal-app:latest -f docker/php/Dockerfile .
 
-      # Tag
-      - name: Tag Image
+      # 5. Build Python API image
+      - name: Build Python API image
+        run: |
+          docker build -t vector-api:latest -f python/Dockerfile ./python
+
+      # 6. Tag images
+      - name: Tag images
         run: |
           docker tag drupal-app:latest \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
 
-      # Push
-      - name: Push Image
-        run: |
-          docker push \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+          docker tag vector-api:latest \
+          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/vector-api:latest
 
-      # SSH Deploy to EC21
+      # 7. Push images
+      - name: Push images
+        run: |
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/vector-api:latest
+
+      # 8. Copy files to EC2
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host:     ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key:      ${{ secrets.EC2_SSH_KEY }}
+          source:   "docker-compose.yml,docker/nginx/default.conf"
+          target:   "/home/ubuntu/app"
+
+      # 9. Deploy
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host:     ${{ secrets.EC2_HOST }}
           username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
+          key:      ${{ secrets.EC2_SSH_KEY }}
           script: |
-            aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
-            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
-            docker stop drupal || true
-            docker rm drupal || true
-            docker run -d --name drupal -p 80:80 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+            aws ecr get-login-password --region ap-south-1 | \
+            docker login --username AWS --password-stdin \
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+
+            cd /home/ubuntu/app
+
+            # Create env file
+            echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > python.env
+            echo "DATABASE_URL=postgresql://postgres:postgres@vector-db:5432/vectors" >> python.env
+            echo "LLM_MODEL=llama-3.3-70b-versatile" >> python.env
+
+            # Pull latest images
+            docker compose pull
+
+            # Restart containers
+            docker compose down || true
+            docker compose up -d
+
+            # Cleanup
+            docker image prune -f

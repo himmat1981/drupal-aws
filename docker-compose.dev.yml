@@ -79,6 +79,7 @@ services:
       LLM_MODEL: llama-3.3-70b-versatile
     volumes:
       - ./python:/app    # ← mount entire python folder not just single file
+      - lora_data:/app/lora_adapter
     depends_on:
       vector-db:
         condition: service_healthy
@@ -91,3 +92,4 @@ networks:
 volumes:
   db_data:
   vector_data:
+  lora_data:    # ← ADD THIS

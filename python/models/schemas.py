@@ -52,3 +52,10 @@ class StoreResponse(BaseModel):
     """Response model for store endpoint."""
     status:  str
     node_id: int
+
+class TextRequest(BaseModel):
+    text: str
+
+class GovernanceRequest(BaseModel):
+    title: str
+    body: str
