@@ -56,25 +56,25 @@ jobs:
         uses: appleboy/scp-action@v0.1.7
         with:
           host:     ${{ secrets.EC2_HOST }}
-          username: ubuntu
+          username: ec2-user
           key:      ${{ secrets.EC2_SSH_KEY }}
           source:   "docker-compose.yml,docker/nginx/default.conf"
-          target:   "/home/ubuntu/app"
+          target:   "/home/ec2-user/app"
 
       # 9. Deploy
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host:     ${{ secrets.EC2_HOST }}
-          username: ubuntu
+          username: ec2-user
           key:      ${{ secrets.EC2_SSH_KEY }}
           script: |
             aws ecr get-login-password --region ap-south-1 | \
             docker login --username AWS --password-stdin \
             ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
 
-            cd /home/ubuntu/app
-
+            cd /home/ec2-user/app
+            echo "AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}" > .env
             # Create env file
             echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" > python.env
             echo "DATABASE_URL=postgresql://postgres:postgres@vector-db:5432/vectors" >> python.env
