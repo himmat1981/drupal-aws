@@ -25,7 +25,7 @@ jobs:
 
       - name: Build & Push Drupal
         run: |
-          docker build -t drupal-app .
+          docker build -t drupal-app:latest -f docker/php/Dockerfile .
           docker tag drupal-app:latest \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
           docker push \
