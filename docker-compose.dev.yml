@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile
     container_name: drupal-php
+    restart: always
     volumes:
       - .:/var/www/html
     environment:
@@ -15,11 +16,12 @@ services:
       db:
         condition: service_healthy
     networks:
-      - drupalnet
+      - common-net
 
   nginx:
     image: nginx:1.25-alpine
     container_name: drupal-nginx
+    restart: always
     ports:
       - "80:80"
     volumes:
@@ -28,11 +30,12 @@ services:
     depends_on:
       - php
     networks:
-      - drupalnet
+      - common-net
 
   db:
     image: mariadb:10.6
     container_name: drupal-db
+    restart: always
     environment:
       MYSQL_DATABASE: drupal
       MYSQL_USER: drupal
@@ -41,7 +44,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     networks:
-      - drupalnet
+      - common-net
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
@@ -49,47 +52,9 @@ services:
       retries: 5
       start_period: 30s
 
-  vector-db:
-    image: pgvector/pgvector:pg16
-    container_name: pgvector-db
-    environment:
-      POSTGRES_DB: vectors
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - vector_data:/var/lib/postgresql/data
-    networks:
-      - drupalnet
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 20s
-
-  python-api:
-    build: ./python
-    container_name: vector-api
-    ports:
-      - "8000:8000"
-    env_file:
-      - ./python/.env
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@pgvector-db:5432/vectors
-      LLM_MODEL: llama-3.3-70b-versatile
-    volumes:
-      - ./python:/app    # ← mount entire python folder not just single file
-      - lora_data:/app/lora_adapter
-    depends_on:
-      vector-db:
-        condition: service_healthy
-    networks:
-      - drupalnet
-
 networks:
-  drupalnet:
+  common-net:
+    external: true
 
 volumes:
   db_data:
-  vector_data:
-  lora_data:    # ← ADD THIS
