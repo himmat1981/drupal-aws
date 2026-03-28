@@ -1,42 +1,22 @@
-FROM php:8.3-fpm
+# docker/php/Dockerfile
 
-# ---------- System deps ----------
+FROM php:8.2-fpm
+
+# Install dependencies
 RUN apt-get update && apt-get install -y \
-    git unzip curl \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    libzip-dev libxml2-dev \
-    && rm -rf /var/lib/apt/lists/*
+    git unzip libzip-dev libpng-dev libonig-dev libxml2-dev \
+    && docker-php-ext-install pdo pdo_mysql zip gd
 
-# ---------- PHP extensions ----------
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install \
-        pdo_mysql \
-        zip \
-        gd \
-        opcache
+# Install composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# ---------- PHP performance ----------
-RUN { \
-    echo "memory_limit=512M"; \
-    echo "upload_max_filesize=64M"; \
-    echo "post_max_size=64M"; \
-    echo "opcache.enable=1"; \
-    echo "opcache.memory_consumption=256"; \
-    echo "opcache.max_accelerated_files=20000"; \
-} > /usr/local/etc/php/conf.d/drupal.ini
-
-# ---------- Composer ----------
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
-
-# ---------- Working dir ----------
+# Set working dir
 WORKDIR /var/www/html
 
-# ---------- Copy only required files ----------
-COPY . .
+# Copy Drupal code
+COPY web/ /var/www/html
 
-# ---------- Permissions ----------
+# Permissions
 RUN chown -R www-data:www-data /var/www/html
 
-USER www-data
-
-EXPOSE 9000
+CMD ["php-fpm"]
