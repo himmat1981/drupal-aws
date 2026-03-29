@@ -21,8 +21,8 @@ services:
     ports:
       - "80:80"
     volumes:
-      - .:/var/www/html
-      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /home/ec2-user/drupal-app:/var/www/html
+      - /home/ec2-user/drupal-app/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on:
       - php
 
