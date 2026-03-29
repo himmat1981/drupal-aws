@@ -29,9 +29,9 @@ jobs:
         run: |
           docker build -t drupal-app:latest -f docker/php/Dockerfile .
           docker tag drupal-app:latest \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
           docker push \
-          ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
 
       - name: Deploy on EC2
         uses: appleboy/ssh-action@v1.0.3
@@ -40,20 +40,20 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            export AWS_ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+
+            cd /home/ec2-user/drupal-app
+
+            # Pull latest code (configs, nginx, compose file)
+            git pull origin main
+
             # Login to ECR
             aws ecr get-login-password --region ap-south-1 | \
             docker login --username AWS --password-stdin \
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+            ${AWS_ACCOUNT_ID}.dkr.ecr.ap-south-1.amazonaws.com
 
-            # Go to project directory (IMPORTANT)
-            cd /home/ec2-user/drupal-app
-
-            # Pull latest images
+            # Pull latest Docker image & restart
             docker compose pull
-
-            # Restart containers
             docker compose down
             docker compose up -d
-
-            # Cleanup unused images
             docker image prune -f
