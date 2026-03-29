@@ -5,7 +5,7 @@ services:
     container_name: drupal-php
     restart: always
     volumes:
-      - .:/var/www/html
+      - /home/ec2-user/drupal-app:/var/www/html   # ← use absolute path, same as nginx
     environment:
       DB_HOST: db
       DB_NAME: drupal
