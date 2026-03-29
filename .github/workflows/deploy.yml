@@ -9,9 +9,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -23,7 +25,7 @@ jobs:
           docker login --username AWS --password-stdin \
           ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
 
-      - name: Build & Push Drupal
+      - name: Build & Push PHP Image
         run: |
           docker build -t drupal-app:latest -f docker/php/Dockerfile .
           docker tag drupal-app:latest \
@@ -38,14 +40,20 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # Login to ECR
             aws ecr get-login-password --region ap-south-1 | \
             docker login --username AWS --password-stdin \
             ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
 
-            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+            # Go to project directory (IMPORTANT)
+            cd /home/ec2-user/drupal-app
 
-            docker stop drupal || true
-            docker rm drupal || true
+            # Pull latest images
+            docker compose pull
 
-            docker run -d -p 80:80 --name drupal \
-            ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com/drupal-app:latest
+            # Restart containers
+            docker compose down
+            docker compose up -d
+
+            # Cleanup unused images
+            docker image prune -f
