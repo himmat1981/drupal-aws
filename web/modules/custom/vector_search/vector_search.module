@@ -43,7 +43,7 @@ function _ai_vector_send_to_python(EntityInterface $entity) {
 
   try {
     $client   = \Drupal::httpClient();
-    $response = $client->post('http://vector-api:8000/nodes/store', [
+    $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/nodes/store', [
       'headers' => [
         'Content-Type' => 'application/json',
         'Accept'       => 'application/json',
@@ -99,7 +99,7 @@ function _ai_vector_generate_seo(EntityInterface $entity) {
   try {
     $client = \Drupal::httpClient();
 
-    $response = $client->post('http://vector-api:8000/seo/generate', [
+    $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/seo/generate', [
       'headers' => [
         'Content-Type' => 'application/json',
         'Accept'       => 'application/json',
@@ -212,7 +212,7 @@ function vector_search_entity_presave(\Drupal\Core\Entity\EntityInterface $entit
 
   try {
     // 🔹 Moderate
-    $response = $client->post('http://vector-api:8000/nlp/moderate', [
+    $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/nlp/moderate', [
       'json' => ['text' => $content],
     ]);
 

@@ -24,7 +24,7 @@ class NlpSummaryWorker extends QueueWorkerBase {
       );
   
       $client   = \Drupal::httpClient();
-      $response = $client->post('http://vector-api:8000/nlp/summarize', [
+      $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/nlp/summarize', [
         'json' => [
           'node_id' => (int) $nid,        // ← required by your API
           'text'    => $data['content'],

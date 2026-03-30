@@ -21,7 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SeoGenerationWorker extends QueueWorkerBase implements ContainerFactoryPluginInterface {
 
-  const API_URL = 'http://vector-api:8000';
+  const API_URL = 'http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000';
 
   protected $entityTypeManager;
   protected $httpClient;

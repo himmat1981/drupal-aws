@@ -18,7 +18,7 @@ class AIGovernanceQueue extends QueueWorkerBase {
         $client = \Drupal::httpClient();
       
         try {
-          $response = $client->post('http://vector-api:8000/ai/governance', [
+          $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/ai/governance', [
             'json' => [
               'title' => $data['title'],
               'body'  => $data['content'],
