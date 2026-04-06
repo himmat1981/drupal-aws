@@ -37,18 +37,26 @@
           });
         }
 
+        function escapeHtml(str) {
+          return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+        }
+
         // Async function
         async function sendMessage() {
 
-          let message = input.value;
+          let message = input.value.trim();
 
           if (!message) return;
 
-          messages.innerHTML += `<p><b>You:</b> ${message}</p>`;
+          messages.innerHTML += `<p><b>You:</b> ${escapeHtml(message)}</p>`;
 
           try {
 
-            const response = await fetch("http://localhost:8000/chatbot/ask", {
+            const response = await fetch("/chatbot-api", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
@@ -65,13 +73,13 @@
             // data.detail is an object: { error, reason, message }
             if (!response.ok) {
               if (data.detail && data.detail.error === "spam_detected") {
-                messages.innerHTML += `<p><b>AI:</b> ⚠️ ${data.detail.message} <br><small>(Reason: ${data.detail.reason})</small></p>`;
+                messages.innerHTML += `<p><b>AI:</b> ⚠️ ${escapeHtml(data.detail.message)} <br><small>(Reason: ${escapeHtml(data.detail.reason)})</small></p>`;
               } else {
                 messages.innerHTML += `<p><b>AI:</b> Something went wrong. Please try again.</p>`;
               }
             } else {
               // Normal successful response
-              messages.innerHTML += `<p><b>AI:</b> ${data.answer}</p>`;
+              messages.innerHTML += `<p><b>AI:</b> ${escapeHtml(data.answer)}</p>`;
             }
 
             messages.scrollTop = messages.scrollHeight;

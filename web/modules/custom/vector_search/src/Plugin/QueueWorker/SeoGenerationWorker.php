@@ -21,7 +21,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SeoGenerationWorker extends QueueWorkerBase implements ContainerFactoryPluginInterface {
 
-  const API_URL = 'http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000';
+ 
 
   protected $entityTypeManager;
   protected $httpClient;
@@ -71,14 +71,15 @@ class SeoGenerationWorker extends QueueWorkerBase implements ContainerFactoryPlu
     $node_id = $data['node_id'];
     $title   = $data['title'];
     $content = $data['content'];
-
+    $base_url = \Drupal::config('system.site')->get('ai_api_base_url') 
+    ?? \Drupal::service('settings')->get('ai_api_base_url');
     $this->logger->notice(
       'Processing SEO for node @id',
       ['@id' => $node_id]
     );
 
     // ── Step 1: Call Python API ───────────────────────────────
-    $response = $this->httpClient->post(self::API_URL . '/seo/generate', [
+    $response = $this->httpClient->post($base_url . '/seo/generate', [
       'headers' => [
         'Content-Type' => 'application/json',
         'Accept'       => 'application/json',

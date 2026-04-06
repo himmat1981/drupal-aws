@@ -20,16 +20,17 @@ class ChatController extends ControllerBase {
 
     $client = \Drupal::httpClient();
 
-    $response = $client->post('http://vector-api:8000/chat', [
+    $response = $client->post('http://python-api:8000/chatbot/ask', [
       'json' => [
         'question' => $question
       ],
-      'timeout' => 30
+      'timeout' => 30,
+      'http_errors' => FALSE,
     ]);
 
     $result = json_decode($response->getBody(), TRUE);
 
-    return new JsonResponse($result);
+    return new JsonResponse($result, $response->getStatusCode());
 
   }
 

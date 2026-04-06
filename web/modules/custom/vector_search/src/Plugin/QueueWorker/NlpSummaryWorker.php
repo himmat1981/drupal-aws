@@ -22,9 +22,10 @@ class NlpSummaryWorker extends QueueWorkerBase {
         'processItem started for node @nid',
         ['@nid' => $nid]
       );
-  
+      $base_url = \Drupal::config('system.site')->get('ai_api_base_url') 
+      ?? \Drupal::service('settings')->get('ai_api_base_url');
       $client   = \Drupal::httpClient();
-      $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/nlp/summarize', [
+      $response = $client->post($base_url . '/nlp/summarize', [
         'json' => [
           'node_id' => (int) $nid,        // ← required by your API
           'text'    => $data['content'],

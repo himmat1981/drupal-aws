@@ -26,49 +26,23 @@ function vector_search_entity_update(EntityInterface $entity) {
 }
 
 function _ai_vector_send_to_python(EntityInterface $entity) {
-  if (!$entity->hasField('body')) {
+  if (!$entity->hasField('body') || $entity->get('body')->isEmpty()) {
     return;
   }
 
-  // Get real body content
-  $content = '';
-  if (!$entity->get('body')->isEmpty()) {
-    $content = strip_tags($entity->get('body')->value);
-  }
-
-  // Don't store if content is empty
+  $content = strip_tags($entity->get('body')->value);
   if (empty($content)) {
     return;
   }
 
-  try {
-    $client   = \Drupal::httpClient();
-    $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/nodes/store', [
-      'headers' => [
-        'Content-Type' => 'application/json',
-        'Accept'       => 'application/json',
-      ],
-      'json' => [
-        'node_id' => (int) $entity->id(),
-        'title'   => (string) $entity->label(),
-        'content' => $content,   // ← REAL CONTENT NOW
-      ],
-      'timeout'     => 20,
-      'http_errors' => FALSE,
-    ]);
-
-    $body = $response->getBody()->getContents();
-    \Drupal::logger('vector_search')->notice(
-      'Vector store response for node @id: @res',
-      ['@id' => $entity->id(), '@res' => $body]
-    );
-  }
-  catch (\Exception $e) {
-    \Drupal::logger('vector_search')->error(
-      'Vector store failed for node @id: @error',
-      ['@id' => $entity->id(), '@error' => $e->getMessage()]
-    );
-  }
+  // Queue instead of blocking HTTP — node save returns instantly.
+  // Worker runs on cron and calls /nodes/store in background.
+  $queue = \Drupal::queue('vector_store_queue');
+  $queue->createItem([
+    'nid'     => $entity->id(),
+    'title'   => $entity->label(),
+    'content' => $content,
+  ]);
 }
 
 /**
@@ -98,8 +72,9 @@ function _ai_vector_generate_seo(EntityInterface $entity) {
 
   try {
     $client = \Drupal::httpClient();
-
-    $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/seo/generate', [
+    $base_url = \Drupal::config('system.site')->get('ai_api_base_url') 
+    ?? \Drupal::service('settings')->get('ai_api_base_url');
+    $response = $client->post($base_url . '/seo/generate', [
       'headers' => [
         'Content-Type' => 'application/json',
         'Accept'       => 'application/json',
@@ -209,21 +184,27 @@ function vector_search_entity_presave(\Drupal\Core\Entity\EntityInterface $entit
   }
 
   $client = \Drupal::httpClient();
-
+  $base_url = \Drupal::config('system.site')->get('ai_api_base_url') 
+  ?? \Drupal::service('settings')->get('ai_api_base_url');
   try {
-    // 🔹 Moderate
-    $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/nlp/moderate', [
-      'json' => ['text' => $content],
+    $response = $client->post($base_url . '/nlp/moderate', [
+      'json'        => ['text' => $content],
+      'timeout'     => 3,      // never block the save for more than 3s
+      'http_errors' => FALSE,
     ]);
 
     $moderation = json_decode($response->getBody(), TRUE);
 
-    if ($moderation['score'] > 0.8) {
+    if (!empty($moderation['score']) && $moderation['score'] > 0.8) {
       \Drupal::messenger()->addWarning('Content may be toxic!');
     }
-
-  } catch (\Exception $e) {
-    \Drupal::logger('mymodule')->error($e->getMessage());
+  }
+  catch (\Exception $e) {
+    // Moderation timeout or failure — log but never block the save.
+    \Drupal::logger('vector_search')->warning(
+      'Moderation skipped for node @id: @error',
+      ['@id' => $entity->id(), '@error' => $e->getMessage()]
+    );
   }
 }
 

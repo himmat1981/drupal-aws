@@ -14,11 +14,12 @@ use Drupal\Core\Queue\QueueWorkerBase;
 class AIGovernanceQueue extends QueueWorkerBase {
 
     public function processItem($data) {
-
+      $base_url = \Drupal::config('system.site')->get('ai_api_base_url') 
+      ?? \Drupal::service('settings')->get('ai_api_base_url');
         $client = \Drupal::httpClient();
       
         try {
-          $response = $client->post('http://ec2-52-66-65-95.ap-south-1.compute.amazonaws.com:8000/ai/governance', [
+          $response = $client->post($base_url . '/ai/governance', [
             'json' => [
               'title' => $data['title'],
               'body'  => $data['content'],
