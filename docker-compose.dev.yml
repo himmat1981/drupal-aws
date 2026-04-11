@@ -12,6 +12,7 @@ services:
       DB_NAME: drupal
       DB_USER: drupal
       DB_PASS: drupal
+      AI_API_BASE_URL: http://python-api:8000
     depends_on:
       db:
         condition: service_healthy
