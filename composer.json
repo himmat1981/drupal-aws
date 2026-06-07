@@ -16,9 +16,12 @@
     ],
     "require": {
         "composer/installers": "^2.0",
+        "cweagans/composer-patches": "^2.0",
         "drupal/ai": "^1.2",
         "drupal/ai_provider_ollama": "^1.2@RC",
         "drupal/ai_provider_openai": "^1.2",
+        "drupal/ai_vdb_provider_pinecone": "^1.1@beta",
+        "drupal/commerce": "^3.0",
         "drupal/core-composer-scaffold": "^10.6",
         "drupal/core-project-message": "^10.6",
         "drupal/core-recommended": "^10.6",
@@ -27,7 +30,7 @@
     "conflict": {
         "drupal/drupal": "*"
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "RC",
     "prefer-stable": true,
     "config": {
         "allow-plugins": {
@@ -36,7 +39,8 @@
             "drupal/core-project-message": true,
             "phpstan/extension-installer": true,
             "dealerdirect/phpcodesniffer-composer-installer": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "cweagans/composer-patches": true
         },
         "sort-packages": true
     },
@@ -74,6 +78,14 @@
             "web/themes/custom/{$name}": [
                 "type:drupal-custom-theme"
             ]
+        },
+        "patches": {
+            "drupal/ai_provider_ollama": {
+                "Fix embeddingsContextSize for BERT-architecture models (e.g. mxbai-embed-large)": "patches/ai_provider_ollama-bert-context-length.patch"
+            },
+            "drupal/ai_vdb_provider_pinecone": {
+                "Fix insertIntoNamespace upsert array structure (400 Proto field error)": "patches/ai_vdb_provider_pinecone-upsert-array.patch"
+            }
         },
         "drupal-core-project-message": {
             "include-keys": [

@@ -1,0 +1,21 @@
+--- a/src/OllamaControlApi.php	2026-05-02 18:00:05.185540102 +0530
++++ b/src/OllamaControlApi.php	2026-05-02 18:00:05.301540454 +0530
+@@ -102,9 +102,16 @@
+    *   Input context max size.
+    */
+   public function embeddingsContextSize(string $model): int {
+-    return Json::decode($this->makeRequest("api/show", [], 'POST', [
++    $info = Json::decode($this->makeRequest("api/show", [], 'POST', [
+       'model' => $model,
+-    ]))['model_info']['llama.context_length'];
++    ]));
++    $model_info = $info['model_info'] ?? [];
++    foreach ($model_info as $key => $value) {
++      if (str_ends_with($key, '.context_length') && is_int($value) && $value > 0) {
++        return $value;
++      }
++    }
++    return 512;
+   }
+ 
+   /**

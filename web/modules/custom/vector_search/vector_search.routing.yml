@@ -5,16 +5,28 @@ vector_search.test:
     _title: 'Vector Test'
   requirements:
     _permission: 'access content'
+
 vector_search.chat:
   path: '/chatbot-api'
   defaults:
     _controller: '\Drupal\vector_search\Controller\ChatController::chat'
+  methods: [POST]
   requirements:
     _permission: 'access content'
+
 vector_search.chat_api:
   path: '/vector-search/chat'
   defaults:
     _controller: '\Drupal\vector_search\Controller\ChatController::chat'
+  methods: [POST]
+  requirements:
+    _permission: 'access content'
+
+vector_search.document_upload:
+  path: '/chatbot-upload'
+  defaults:
+    _controller: '\Drupal\vector_search\Controller\ChatController::uploadDocument'
+    _title: 'Document Upload'
   methods: [POST]
   requirements:
     _permission: 'access content'

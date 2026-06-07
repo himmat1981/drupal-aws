@@ -13,6 +13,7 @@ services:
       DB_USER: drupal
       DB_PASS: drupal
       AI_API_BASE_URL: http://python-api:8000
+      GROQ_API_KEY: ${GROQ_API_KEY}
     depends_on:
       db:
         condition: service_healthy
@@ -53,9 +54,19 @@ services:
       retries: 5
       start_period: 30s
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: drupal-ollama
+    restart: always
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - common-net
+
 networks:
   common-net:
     external: true
 
 volumes:
   db_data:
+  ollama_data:

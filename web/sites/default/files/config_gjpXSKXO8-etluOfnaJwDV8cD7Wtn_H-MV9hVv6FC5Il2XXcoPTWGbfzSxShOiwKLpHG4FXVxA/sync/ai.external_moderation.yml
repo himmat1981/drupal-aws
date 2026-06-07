@@ -1,0 +1,8 @@
+_core:
+  default_config_hash: FNT2zzMLKeg6TviGJAYUvRSjAJmBvmdLnh9USO58MAc
+moderations:
+  -
+    provider: groq
+    tags: ''
+    model_title: ''
+    models: {  }

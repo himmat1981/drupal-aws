@@ -1,0 +1,30 @@
+uuid: 7c13bbff-019b-4438-a394-4b53c40d1d99
+langcode: en
+status: true
+dependencies:
+  config:
+    - ai_vdb_provider_pinecone.settings
+  module:
+    - ai_search
+    - ai_vdb_provider_pinecone
+id: pinecone_vector_server
+name: 'Pinecone Vector Server'
+description: 'Pinecone serverless + Ollama embeddings'
+backend: search_api_ai_search
+backend_config:
+  chat_model: groq__llama-3.3-70b-versatile
+  database: pinecone
+  database_settings:
+    database_name: himmat
+    collection: drupal_nodes
+    metric: cosine_similarity
+  embeddings_engine: ollama__mxbai_embed_large_latest
+  embeddings_engine_configuration:
+    set_dimensions: true
+    dimensions: 1024
+  embedding_strategy: average_pool
+  embedding_strategy_configuration:
+    chunk_size: '512'
+    chunk_min_overlap: '50'
+    skip_moderation: false
+  include_raw_embedding_vector: false

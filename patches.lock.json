@@ -1,0 +1,29 @@
+{
+    "_hash": "20590a700f1bf9164574971d7dc5cd1d28eb0e608a5c3ce74d8462c1a0b90ee1",
+    "patches": {
+        "drupal/ai_provider_ollama": [
+            {
+                "package": "drupal/ai_provider_ollama",
+                "description": "Fix embeddingsContextSize for BERT-architecture models (e.g. mxbai-embed-large)",
+                "url": "patches/ai_provider_ollama-bert-context-length.patch",
+                "sha256": "4299eb59a73e5f2a22991e90a0f40714e741979dcaa79983b1c3ffc2825800b1",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "drupal/ai_vdb_provider_pinecone": [
+            {
+                "package": "drupal/ai_vdb_provider_pinecone",
+                "description": "Fix insertIntoNamespace upsert array structure (400 Proto field error)",
+                "url": "patches/ai_vdb_provider_pinecone-upsert-array.patch",
+                "sha256": "6086402a3edf27f121004cb025c183316ca866f0f61f7ce8d2b1f3d6e6525961",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}

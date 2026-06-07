@@ -1,0 +1,12 @@
+recommendations:
+  version: VERSION
+  js:
+    js/recommendations.js: {}
+  css:
+    theme:
+      css/ecommerce.css: {}
+  dependencies:
+    - core/drupal
+    - core/once
+    - core/jquery
+    - core/drupalSettings

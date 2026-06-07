@@ -1,0 +1,26 @@
+uuid: 08f6e87c-fa88-41a9-a7ac-9e5dd13357fe
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - node.type.product
+  module:
+    - text
+_core:
+  default_config_hash: 7V2uKiFr1_a8iHwy0M_x1Fuo3d3r52-x1-DoMde-ZIw
+id: node.product.body
+field_name: body
+entity_type: node
+bundle: product
+label: Description
+description: 'Full product description.'
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  display_summary: false
+  required_summary: false
+  allowed_formats: {  }
+field_type: text_with_summary

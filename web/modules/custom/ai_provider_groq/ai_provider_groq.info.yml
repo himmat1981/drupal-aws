@@ -1,0 +1,10 @@
+name: 'Groq AI Provider'
+description: 'Integrates Groq (LLaMA models) as an AI provider for the Drupal AI module via Groq OpenAI-compatible API.'
+package: 'AI Providers'
+type: module
+core_version_requirement: ^10.3 || ^11
+configure: ai_provider_groq.settings_form
+
+dependencies:
+  - ai:ai
+  - key:key

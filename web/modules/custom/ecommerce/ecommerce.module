@@ -1,0 +1,210 @@
+<?php
+
+/**
+ * @file
+ * Ecommerce module — product content type + AI-powered recommendations.
+ *
+ * Key hooks:
+ *   hook_user_login      → fetch personalized product recommendations from Python
+ *                          and cache them in private tempstore for the session
+ *   hook_entity_insert   → queue new product nodes for sync to Python embeddings DB
+ *   hook_entity_update   → queue updated product nodes for re-sync
+ *   hook_theme           → register Twig template for recommendations block
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\user\UserInterface;
+
+// ── Helper ─────────────────────────────────────────────────────────────────
+
+/**
+ * Return the Python API base URL from settings.php / .env.
+ */
+function _ecommerce_api_base_url(): string {
+  return \Drupal::service('settings')->get('ai_api_base_url', 'http://python-api:8000');
+}
+
+// ── User login hook ─────────────────────────────────────────────────────────
+
+/**
+ * Implements hook_user_login().
+ *
+ * On every user login, asynchronously fetches personalized product
+ * recommendations from the Python recommendation API and stores them
+ * in the private tempstore so the RecommendedProductsBlock can render
+ * them without an additional HTTP round-trip per page.
+ */
+function ecommerce_user_login(UserInterface $account) {
+  $uid = (int) $account->id();
+
+  // Skip anonymous and admin (uid 0 and 1)
+  if ($uid <= 1) {
+    return;
+  }
+
+  try {
+    $response = \Drupal::httpClient()->post(
+      _ecommerce_api_base_url() . '/recommendations/login',
+      [
+        'json'        => ['user_id' => $uid, 'limit' => 10],
+        'timeout'     => 5,
+        'http_errors' => FALSE,
+      ]
+    );
+
+    if ($response->getStatusCode() === 200) {
+      $data = json_decode($response->getBody()->getContents(), TRUE);
+
+      if (!empty($data['products'])) {
+        \Drupal::service('tempstore.private')
+          ->get('ecommerce')
+          ->set('recommendations_' . $uid, [
+            'products'  => $data['products'],
+            'strategy'  => $data['strategy'] ?? 'popular',
+            'timestamp' => time(),
+          ]);
+      }
+    }
+  }
+  catch (\Exception $e) {
+    \Drupal::logger('ecommerce')->warning(
+      'Could not fetch recommendations for user @uid: @error',
+      ['@uid' => $uid, '@error' => $e->getMessage()]
+    );
+  }
+}
+
+// ── Commerce product sync hooks ─────────────────────────────────────────────
+// Watches commerce_product entities (the real Drupal Commerce products at
+// /product/{id}), NOT the custom 'product' node bundle.
+
+/**
+ * Implements hook_entity_insert().
+ */
+function ecommerce_entity_insert(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() !== 'commerce_product') {
+    return;
+  }
+  _ecommerce_queue_product_sync($entity);
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function ecommerce_entity_update(EntityInterface $entity) {
+  if ($entity->getEntityTypeId() !== 'commerce_product') {
+    return;
+  }
+  _ecommerce_queue_product_sync($entity);
+}
+
+/**
+ * Queue a Commerce product to be synced to the Python embeddings API.
+ *
+ * commerce_product fields used:
+ *   product_id  → numeric ID (same as entity ID)
+ *   title       → product name
+ *   body        → description (plain text)
+ *   variations  → first variation's price + SKU
+ *
+ * Uses product_sync_queue so the save is non-blocking.
+ * ProductSyncWorker calls POST /products/store on next cron run.
+ */
+function _ecommerce_queue_product_sync(EntityInterface $entity) {
+  // Extract description from body field
+  $description = '';
+  if ($entity->hasField('body') && !$entity->get('body')->isEmpty()) {
+    $description = strip_tags($entity->get('body')->value);
+  }
+
+  // Extract price + SKU from the first product variation
+  $price = 0.0;
+  $sku   = '';
+  if ($entity->hasField('variations') && !$entity->get('variations')->isEmpty()) {
+    /** @var \Drupal\commerce_product\Entity\ProductVariationInterface $variation */
+    $variation = $entity->getDefaultVariation();
+    if ($variation) {
+      $sku = (string) $variation->getSku();
+      if ($variation->getPrice()) {
+        $price = (float) $variation->getPrice()->getNumber();
+      }
+    }
+  }
+
+  // Use the product type as category (e.g. "default", "clothing", etc.)
+  $category = (string) $entity->bundle();
+
+  \Drupal::queue('product_sync_queue')->createItem([
+    'product_id'  => (int) $entity->id(),
+    'title'       => (string) $entity->label(),
+    'description' => $description,
+    'price'       => $price,
+    'category'    => $category,
+    'sku'         => $sku,
+  ]);
+}
+
+// ── Commerce product view — interaction tracking ────────────────────────────
+
+/**
+ * Implements hook_ENTITY_TYPE_view() for commerce_product.
+ *
+ * When a logged-in user views a Commerce product page, log it as a
+ * 'view' interaction so the recommendation engine learns their preferences.
+ * This fires on every full-page product view (view_mode = full).
+ */
+function ecommerce_commerce_product_view(array &$build,
+    EntityInterface $entity,
+    $display, $view_mode) {
+  // Only track full-page views, not teasers or embedded widgets
+  if ($view_mode !== 'full') {
+    return;
+  }
+
+  $account = \Drupal::currentUser();
+  if ($account->isAnonymous() || $account->id() <= 1) {
+    return;
+  }
+
+  $uid        = (int) $account->id();
+  $product_id = (int) $entity->id();
+  $base_url   = _ecommerce_api_base_url();
+
+  // Fire-and-forget: non-blocking, short timeout.
+  // A failed interaction log is not critical — never let it slow the page.
+  try {
+    \Drupal::httpClient()->post(
+      $base_url . '/recommendations/interact',
+      [
+        'query'       => [
+          'user_id'          => $uid,
+          'product_id'       => $product_id,
+          'interaction_type' => 'view',
+        ],
+        'timeout'     => 2,
+        'http_errors' => FALSE,
+      ]
+    );
+  }
+  catch (\Exception $e) {
+    // Silently ignore — interaction tracking must never break product pages
+  }
+}
+
+// ── Theme ───────────────────────────────────────────────────────────────────
+
+/**
+ * Implements hook_theme().
+ */
+function ecommerce_theme() {
+  return [
+    'ecommerce_recommendations' => [
+      'variables' => [
+        'products' => [],
+        'strategy' => 'popular',
+        'uid'      => 0,
+      ],
+      'template'  => 'ecommerce-recommendations',
+    ],
+  ];
+}

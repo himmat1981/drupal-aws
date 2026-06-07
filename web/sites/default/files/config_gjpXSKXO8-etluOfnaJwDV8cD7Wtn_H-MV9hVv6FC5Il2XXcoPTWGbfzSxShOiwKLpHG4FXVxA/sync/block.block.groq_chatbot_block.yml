@@ -1,0 +1,38 @@
+uuid: ea9d246b-77cc-4ab5-b9d2-c8498830cd9c
+langcode: en
+status: true
+dependencies:
+  module:
+    - ai_chatbot
+  theme:
+    - olivero
+id: groq_chatbot_block
+theme: olivero
+region: content
+weight: -5
+provider: null
+plugin: ai_deepchat_block
+settings:
+  id: ai_deepchat_block
+  label: 'Groq AI Chatbot'
+  label_display: '0'
+  provider: ai_chatbot
+  ai_assistant: groq_chatbot
+  bot_name: 'Knowledge Assistant'
+  bot_image: /modules/contrib/ai/modules/ai_chatbot/assets/ai-icon-gradient.svg
+  use_username: 0
+  default_username: You
+  use_avatar: 0
+  default_avatar: ''
+  first_message: 'Hi! I can answer questions about the website content. I search our knowledge base powered by Pinecone + Groq. Ask me anything!'
+  stream: 0
+  toggle_state: open
+  width: 400px
+  height: 500px
+  placement: bottom-right
+  show_structured_results: false
+  show_copy_icon: true
+  collapse_minimal: true
+  style_file: 'module:ai_chatbot:toolbar.yml'
+  verbose_mode: false
+visibility: {  }

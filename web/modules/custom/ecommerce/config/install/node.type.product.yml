@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {}
+third_party_settings: {}
+name: Product
+type: product
+description: 'An ecommerce product available for purchase.'
+help: ''
+new_revision: false
+preview_mode: 1
+display_submitted: false

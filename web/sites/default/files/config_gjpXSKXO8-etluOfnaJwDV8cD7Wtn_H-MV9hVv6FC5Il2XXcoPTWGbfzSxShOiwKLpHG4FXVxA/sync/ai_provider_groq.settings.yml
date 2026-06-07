@@ -1,0 +1,4 @@
+_core:
+  default_config_hash: auT6L5gCX2QGg6CvqIBgKmUzAiiyauRnmXE_o9rVb4w
+api_key: groq_api_key
+model: llama-3.3-70b-versatile

@@ -1,0 +1,19 @@
+uuid: c50dffee-0af2-4989-9450-5a0adcba1028
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_ai_quality
+    - node.type.article
+id: node.article.field_ai_quality
+field_name: field_ai_quality
+entity_type: node
+bundle: article
+label: 'Ai Quality'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

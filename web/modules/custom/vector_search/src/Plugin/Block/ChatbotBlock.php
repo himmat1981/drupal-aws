@@ -19,11 +19,11 @@ class ChatbotBlock extends BlockBase {
     return [
 
       'chatbot_container' => [
-        '#type' => 'container',
+        '#type'       => 'container',
         '#attributes' => ['id' => 'chatbot-container'],
 
         'chatbot_box' => [
-          '#type' => 'container',
+          '#type'       => 'container',
           '#attributes' => ['id' => 'chatbot-box'],
 
           'header' => [
@@ -31,25 +31,36 @@ class ChatbotBlock extends BlockBase {
           ],
 
           'messages' => [
-            '#type' => 'container',
+            '#type'       => 'container',
             '#attributes' => ['id' => 'chatbot-messages'],
           ],
 
+          // Document upload strip — shown above input area
+          'upload_area' => [
+            '#markup' => '
+              <div id="chatbot-upload-area">
+                <span id="chatbot-upload-label" role="button" tabindex="0" title="Attach a document (PDF, DOCX, TXT, MD — max 10 MB)">📎</span>
+                <span id="chatbot-file-name"></span>
+                <button id="chatbot-file-clear" title="Remove file" style="display:none">✕</button>
+              </div>
+            ',
+          ],
+
           'input_area' => [
-            '#type' => 'container',
+            '#type'       => 'container',
             '#attributes' => ['id' => 'chatbot-input-area'],
 
             'input' => [
-              '#type' => 'textfield',
+              '#type'       => 'textfield',
               '#attributes' => [
-                'id' => 'chatbot-input',
-                'placeholder' => 'Ask something...',
+                'id'          => 'chatbot-input',
+                'placeholder' => 'Ask something…',
               ],
             ],
 
             'send' => [
-              '#type' => 'button',
-              '#value' => 'Send',
+              '#type'       => 'button',
+              '#value'      => 'Send',
               '#attributes' => [
                 'id' => 'chatbot-send',
               ],
@@ -65,9 +76,9 @@ class ChatbotBlock extends BlockBase {
 
       '#attached' => [
         'library' => [
-          'vector_search/chatbot'
-        ]
-      ]
+          'vector_search/chatbot',
+        ],
+      ],
 
     ];
 

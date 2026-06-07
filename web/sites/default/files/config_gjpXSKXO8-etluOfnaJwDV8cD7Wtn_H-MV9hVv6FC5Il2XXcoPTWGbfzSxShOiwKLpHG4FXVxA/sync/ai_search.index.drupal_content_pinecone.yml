@@ -1,0 +1,20 @@
+index_id: drupal_content_pinecone
+control_field_max_length: false
+exclude_chunk_from_metadata: false
+indexing_options:
+  title:
+    field_name: title
+    indexing_option: main_content
+    max: 0
+  body:
+    field_name: body
+    indexing_option: main_content
+    max: 0
+  type:
+    field_name: type
+    indexing_option: contextual_content
+    max: 0
+  status:
+    field_name: status
+    indexing_option: contextual_content
+    max: 0

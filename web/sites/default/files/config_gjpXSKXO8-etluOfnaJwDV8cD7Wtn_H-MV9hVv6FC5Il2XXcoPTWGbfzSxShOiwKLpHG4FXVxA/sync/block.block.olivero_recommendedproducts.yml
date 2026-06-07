@@ -1,0 +1,20 @@
+uuid: 21295a46-6373-4dc8-b7b6-8e40311bd3aa
+langcode: en
+status: true
+dependencies:
+  module:
+    - ecommerce
+  theme:
+    - olivero
+id: olivero_recommendedproducts
+theme: olivero
+region: content
+weight: -7
+provider: null
+plugin: recommended_products_block
+settings:
+  id: recommended_products_block
+  label: 'Recommended Products'
+  label_display: visible
+  provider: ecommerce
+visibility: {  }

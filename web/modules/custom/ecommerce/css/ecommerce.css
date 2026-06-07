@@ -1,0 +1,131 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   Ecommerce — Recommended Products Block
+   ───────────────────────────────────────────────────────────────────────── */
+
+.ec-recommendations {
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+}
+
+.ec-recommendations__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1rem;
+  color: #1a1a2e;
+}
+
+/* Grid: responsive, min 200px per card */
+.ec-recommendations__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Product card ──────────────────────────────────────────────────────── */
+
+.ec-product-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.ec-product-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.10);
+  transform: translateY(-2px);
+}
+
+/* Category badge */
+.ec-product-card__category {
+  display: inline-block;
+  background: #e3f2fd;
+  color: #1565c0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 12px;
+  align-self: flex-start;
+}
+
+/* Title */
+.ec-product-card__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.ec-product-card__title-link {
+  color: #1a1a2e;
+  text-decoration: none;
+}
+
+.ec-product-card__title-link:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+/* Description */
+.ec-product-card__description {
+  font-size: 0.82rem;
+  color: #666;
+  line-height: 1.45;
+  margin: 0;
+  flex: 1;
+}
+
+/* Footer — price + SKU */
+.ec-product-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ec-product-card__price {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #2e7d32;
+}
+
+.ec-product-card__sku {
+  font-size: 0.72rem;
+  color: #999;
+}
+
+/* CTA button */
+.ec-product-card__btn {
+  display: block;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+  background: #1565c0;
+  color: #ffffff;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-top: auto;
+  transition: background 0.2s ease;
+}
+
+.ec-product-card__btn:hover {
+  background: #0d47a1;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+/* Empty state */
+.ec-no-recommendations {
+  color: #888;
+  font-style: italic;
+  margin: 0;
+}

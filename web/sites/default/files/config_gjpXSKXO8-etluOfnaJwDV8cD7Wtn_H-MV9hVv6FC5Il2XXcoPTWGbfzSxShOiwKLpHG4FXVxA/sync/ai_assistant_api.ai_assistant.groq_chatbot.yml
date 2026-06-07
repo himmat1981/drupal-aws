@@ -1,0 +1,38 @@
+uuid: d4a1b2c3-e5f6-7890-abcd-ef1234567890
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: FHx1r7KN-tnAs0yr7Qn5ZoxmLvQHrcQPlBOdW02Xkbc
+id: groq_chatbot
+label: 'Groq Chatbot'
+description: 'AI Chatbot powered by Groq LLaMA models'
+system_prompt: 'You are a knowledgeable assistant for this website. Use the provided context from the knowledge base to answer questions accurately. If context is provided, base your answer on it. If no relevant context is found, say you do not have that information. Be concise and helpful.'
+pre_action_prompt: ''
+instructions: ''
+allow_history: session
+history_context_length: '10'
+error_message: 'Sorry, something went wrong. Please try again.'
+specific_error_messages:
+  AiRateLimitException: 'The AI service is busy right now. Please wait a moment and try again.'
+  AiQuotaException: 'The AI quota has been reached. Please contact the site administrator.'
+  AiSetupFailureException: 'The AI provider is not configured correctly. Please contact the site administrator.'
+llm_provider: groq
+llm_model: llama-3.3-70b-versatile
+llm_configuration:
+  temperature: 0.7
+  max_tokens: 1024
+actions_enabled:
+  rag_action:
+    rag_0:
+      database: drupal_content_pinecone
+      description: 'Drupal website content - articles, pages and products indexed to Pinecone vector database'
+      score_threshold: 0.5
+      min_results: 1
+      max_results: 5
+      output_mode: chunks
+      rendered_view_mode: full
+      access_check: true
+roles: {  }
+use_function_calling: false
+ai_agent: ''

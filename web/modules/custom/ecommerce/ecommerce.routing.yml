@@ -1,0 +1,17 @@
+ecommerce.recommendations.ajax:
+  path: '/ecommerce/recommendations'
+  defaults:
+    _controller: '\Drupal\ecommerce\Controller\RecommendationController::ajaxRecommendations'
+    _title: 'My Recommendations'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+
+ecommerce.product.interact:
+  path: '/ecommerce/product/{product_id}/interact'
+  defaults:
+    _controller: '\Drupal\ecommerce\Controller\RecommendationController::recordInteraction'
+    _title: 'Record Interaction'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    product_id: '\d+'
+  methods: [POST]

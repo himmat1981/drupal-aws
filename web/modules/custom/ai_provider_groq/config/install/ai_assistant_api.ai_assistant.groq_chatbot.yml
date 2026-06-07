@@ -1,0 +1,28 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - ai_provider_groq
+id: groq_chatbot
+label: 'Groq Chatbot'
+description: 'AI Chatbot powered by Groq LLaMA models'
+allow_history: session
+history_context_length: '10'
+system_prompt: 'You are a helpful, friendly assistant embedded in a Drupal website. Be concise and accurate in your answers.'
+instructions: ''
+pre_action_prompt: ''
+actions_enabled: {  }
+error_message: 'Sorry, something went wrong. Please try again.'
+specific_error_messages:
+  AiRateLimitException: 'The AI service is busy right now. Please wait a moment and try again.'
+  AiQuotaException: 'The AI quota has been reached. Please contact the site administrator.'
+  AiSetupFailureException: 'The AI provider is not configured correctly. Please contact the site administrator.'
+llm_provider: groq
+llm_model: 'llama-3.3-70b-versatile'
+llm_configuration:
+  temperature: 0.7
+  max_tokens: 1024
+roles: {  }
+use_function_calling: false
+ai_agent: ''
+uuid: 'd4a1b2c3-e5f6-7890-abcd-ef1234567890'

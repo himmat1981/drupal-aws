@@ -1,0 +1,17 @@
+--- a/src/Pinecone.php	2026-05-02 18:01:15.864769753 +0530
++++ b/src/Pinecone.php	2026-05-02 18:01:15.917769936 +0530
+@@ -173,9 +173,11 @@
+     try {
+       $this->getClientForIndex($index_name)->data()->vectors()->upsert(
+         vectors: [
+-          'id' => $data['drupal_long_id'],
+-          'values' => $data['vector'],
+-          'metadata' => $metadata,
++          [
++            'id' => $data['drupal_long_id'],
++            'values' => $data['vector'],
++            'metadata' => $metadata,
++          ],
+         ],
+         namespace: $namespace,
+       );

@@ -1,0 +1,29 @@
+uuid: eb2a7059-500f-4ad2-9c0e-2c44c2c1388f
+langcode: en
+status: true
+dependencies:
+  config:
+    - filter.format.restricted_html
+  module:
+    - comment
+    - commerce_checkout
+    - commerce_product
+    - contact
+    - filter
+    - search
+    - system
+_core:
+  default_config_hash: 6WavjUYXIegP9AAg2zXGx54MWIVoomC3SZhNiqe-Dyk
+id: anonymous
+label: 'Anonymous user'
+weight: 0
+is_admin: false
+permissions:
+  - 'access checkout'
+  - 'access comments'
+  - 'access content'
+  - 'access deepchat api'
+  - 'access site-wide contact form'
+  - 'search content'
+  - 'use text format restricted_html'
+  - 'view commerce_product'

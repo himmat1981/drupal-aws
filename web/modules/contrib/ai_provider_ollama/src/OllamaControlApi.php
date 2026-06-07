@@ -102,9 +102,16 @@ class OllamaControlApi {
    *   Input context max size.
    */
   public function embeddingsContextSize(string $model): int {
-    return Json::decode($this->makeRequest("api/show", [], 'POST', [
+    $info = Json::decode($this->makeRequest("api/show", [], 'POST', [
       'model' => $model,
-    ]))['model_info']['llama.context_length'];
+    ]));
+    $model_info = $info['model_info'] ?? [];
+    foreach ($model_info as $key => $value) {
+      if (str_ends_with($key, '.context_length') && is_int($value) && $value > 0) {
+        return $value;
+      }
+    }
+    return 512;
   }
 
   /**

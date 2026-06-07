@@ -1,0 +1,86 @@
+<?php
+
+/**
+ * @file
+ * Install file for the Pinecone VDB Provider.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function ai_vdb_provider_pinecone_install() {
+  $config_factory = \Drupal::configFactory();
+
+  // Check if we have old configuration from the AI submodule.
+  $old_config = $config_factory->get('vdb_provider_pinecone.settings');
+  $old_data = $old_config->getRawData();
+  if (!empty($old_data['api_key'])) {
+    $new_config = $config_factory->getEditable('ai_vdb_provider_pinecone.settings');
+
+    // Bail if we already have data.
+    $new_data = $new_config->getRawData();
+    if (!empty($new_data['api_key'])) {
+      return;
+    }
+
+    // Copy the old configuration from the previous AI submodule into the new
+    // external module.
+    $new_config->setData($old_data);
+    $new_config->save();
+  }
+
+  // Uninstall the old submodule of AI core if it is still installed.
+  /** @var \Drupal\Core\Extension\ModuleHandlerInterface $handler */
+  $handler = \Drupal::service('module_handler');
+  if ($handler->moduleExists('vdb_provider_pinecone')) {
+    /** @var \Drupal\Core\Extension\ModuleInstallerInterface $installer */
+    $installer = \Drupal::service('module_installer');
+    $installer->uninstall(['vdb_provider_pinecone']);
+  }
+}
+
+/**
+ * Set settings dependency for Search API Back-ends using this module.
+ */
+function ai_vdb_provider_pinecone_update_10001(): void {
+  $config_factory = \Drupal::configFactory();
+  foreach ($config_factory->listAll('search_api.server.') as $config_name) {
+    $config = $config_factory->getEditable($config_name);
+
+    // Bail for non-Pinecone back-ends.
+    $backend_config = $config->get('backend_config');
+    if (
+      !is_array($backend_config)
+      || !isset($backend_config['database'])
+      || $backend_config['database'] !== 'pinecone'
+    ) {
+      continue;
+    }
+
+    $has_update = FALSE;
+    $dependencies = $config->get('dependencies');
+
+    // Add module dependency.
+    if (!isset($dependencies['module'])) {
+      $dependencies['module'] = [];
+    }
+    if (!in_array('ai_vdb_provider_pinecone', $dependencies['module'])) {
+      $has_update = TRUE;
+      $dependencies['module'][] = 'ai_vdb_provider_pinecone';
+    }
+
+    // Add config dependency.
+    if (!isset($dependencies['config'])) {
+      $dependencies['config'] = [];
+    }
+    if (!in_array('ai_vdb_provider_pinecone.settings', $dependencies['config'])) {
+      $has_update = TRUE;
+      $dependencies['config'][] = 'ai_vdb_provider_pinecone.settings';
+    }
+
+    if ($has_update) {
+      $config->set('dependencies', $dependencies);
+      $config->save();
+    }
+  }
+}

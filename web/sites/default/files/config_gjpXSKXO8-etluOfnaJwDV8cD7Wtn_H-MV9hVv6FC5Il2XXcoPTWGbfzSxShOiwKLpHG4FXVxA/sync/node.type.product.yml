@@ -1,0 +1,13 @@
+uuid: d57cbe28-e8b8-4991-b86c-b2e91e1c4874
+langcode: en
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: 1yvG16R_6mOJGWrp4tevk1_l-lD76qFRhW5I8hbBNFs
+name: Product
+type: product
+description: 'An ecommerce product available for purchase.'
+help: null
+new_revision: false
+preview_mode: 1
+display_submitted: false

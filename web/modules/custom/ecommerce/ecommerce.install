@@ -1,0 +1,96 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the ecommerce module.
+ *
+ * Creates the Product content type with three custom fields:
+ *   field_price    (decimal)  — selling price
+ *   field_category (string)   — product category / department
+ *   field_sku      (string)   — stock-keeping unit identifier
+ *
+ * The body field is added via config/install/field.field.node.product.body.yml.
+ */
+
+use Drupal\field\Entity\FieldConfig;
+use Drupal\field\Entity\FieldStorageConfig;
+
+/**
+ * Implements hook_install().
+ */
+function ecommerce_install() {
+  // Note: the 'product' node type and body field are created via
+  // config/install YAML files. This hook only adds custom fields.
+
+  // ── Add custom fields ─────────────────────────────────────────────────────
+  _ecommerce_ensure_field(
+    field_name: 'field_price',
+    type:       'decimal',
+    label:      'Price',
+    settings:   ['precision' => 10, 'scale' => 2],
+  );
+
+  _ecommerce_ensure_field(
+    field_name: 'field_category',
+    type:       'string',
+    label:      'Category',
+    settings:   ['max_length' => 255],
+  );
+
+  _ecommerce_ensure_field(
+    field_name: 'field_sku',
+    type:       'string',
+    label:      'SKU',
+    settings:   ['max_length' => 255],
+  );
+
+  \Drupal::messenger()->addStatus(
+    t('Ecommerce module installed. Product content type created with price, category, and SKU fields.')
+  );
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function ecommerce_uninstall() {
+  foreach (['field_price', 'field_category', 'field_sku'] as $field_name) {
+    $field_config = FieldConfig::loadByName('node', 'product', $field_name);
+    if ($field_config) {
+      $field_config->delete();
+    }
+    $storage = FieldStorageConfig::loadByName('node', $field_name);
+    if ($storage) {
+      $storage->delete();
+    }
+  }
+
+  // The node type config is removed automatically when the module is uninstalled.
+}
+
+/**
+ * Create a field storage + field instance on the product bundle if missing.
+ *
+ * Named parameters require PHP 8.0+ — Drupal 10 requires PHP 8.1+, so this
+ * is safe.
+ */
+function _ecommerce_ensure_field(string $field_name, string $type,
+                                  string $label, array $settings = []): void {
+  if (!FieldStorageConfig::loadByName('node', $field_name)) {
+    FieldStorageConfig::create([
+      'field_name'  => $field_name,
+      'entity_type' => 'node',
+      'type'        => $type,
+      'settings'    => $settings,
+    ])->save();
+  }
+
+  if (!FieldConfig::loadByName('node', 'product', $field_name)) {
+    FieldConfig::create([
+      'field_name'  => $field_name,
+      'entity_type' => 'node',
+      'bundle'      => 'product',
+      'label'       => $label,
+      'required'    => FALSE,
+    ])->save();
+  }
+}

@@ -1,0 +1,19 @@
+uuid: 5d704196-2370-44bf-9b3e-cd6540e1a004
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_category
+    - node.type.product
+id: node.product.field_category
+field_name: field_category
+entity_type: node
+bundle: product
+label: Category
+description: ''
+required: false
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

@@ -1,0 +1,83 @@
+uuid: ed1b5719-9e0a-46ca-9c29-a74431b05a63
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.body
+    - search_api.server.pinecone_vector_server
+  module:
+    - node
+id: drupal_content_pinecone
+name: 'Drupal Content (Pinecone)'
+description: 'Indexes all content to Pinecone vector DB'
+read_only: false
+field_settings:
+  body:
+    label: Body
+    datasource_id: 'entity:node'
+    property_path: body
+    type: text
+    dependencies:
+      config:
+        - field.storage.node.body
+  status:
+    label: Published
+    datasource_id: 'entity:node'
+    property_path: status
+    type: boolean
+    dependencies:
+      module:
+        - node
+  title:
+    label: Title
+    datasource_id: 'entity:node'
+    property_path: title
+    type: text
+    dependencies:
+      module:
+        - node
+  type:
+    label: 'Content type'
+    datasource_id: 'entity:node'
+    property_path: type
+    type: string
+    dependencies:
+      module:
+        - node
+datasource_settings:
+  'entity:node':
+    bundles:
+      default: true
+      selected: {  }
+    languages:
+      default: true
+      selected: {  }
+    plugin_id: 'entity:node'
+    settings:
+      bundles:
+        default: true
+        selected:
+          - article
+          - page
+          - product
+      languages:
+        default: true
+        selected: {  }
+processor_settings:
+  add_url: {  }
+  aggregated_field: {  }
+  custom_value: {  }
+  entity_type: {  }
+  language_with_fallback: {  }
+  rendered_item: {  }
+tracker_settings:
+  default:
+    indexing_order: fifo
+    plugin_id: default
+    settings: {  }
+options:
+  cron_limit: 50
+  delete_on_fail: true
+  index_directly: true
+  track_changes_in_references: true
+server: pinecone_vector_server

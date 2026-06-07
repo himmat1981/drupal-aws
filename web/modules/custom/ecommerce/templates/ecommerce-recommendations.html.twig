@@ -1,0 +1,70 @@
+{#
+/**
+ * @file
+ * ecommerce-recommendations.html.twig
+ *
+ * Available variables:
+ *   - products: array of product objects (product_id, title, description,
+ *               price, category, sku, similarity_score|popularity_score)
+ *   - strategy: 'popular' | 'personalized' | 'cached'
+ *   - uid:      current user ID
+ */
+#}
+
+<div class="ec-recommendations" id="ec-recommendations">
+
+  <h3 class="ec-recommendations__title">
+    {% if strategy == 'personalized' %}
+      {{ 'Recommended For You'|t }}
+    {% else %}
+      {{ 'Popular Products'|t }}
+    {% endif %}
+  </h3>
+
+  {% if products is empty %}
+    <p class="ec-no-recommendations">
+      {{ 'No recommendations available right now.'|t }}
+    </p>
+  {% else %}
+    <div class="ec-recommendations__grid">
+      {% for product in products %}
+        <div class="ec-product-card" data-product-id="{{ product.product_id }}">
+
+          {% if product.category %}
+            <span class="ec-product-card__category">{{ product.category }}</span>
+          {% endif %}
+
+          <h4 class="ec-product-card__title">
+            <a href="/node/{{ product.product_id }}" class="ec-product-card__title-link">
+              {{ product.title }}
+            </a>
+          </h4>
+
+          {% if product.description %}
+            <p class="ec-product-card__description">
+              {{ product.description|slice(0, 120) }}{% if product.description|length > 120 %}…{% endif %}
+            </p>
+          {% endif %}
+
+          <div class="ec-product-card__footer">
+            {% if product.price is defined and product.price > 0 %}
+              <span class="ec-product-card__price">${{ product.price|number_format(2) }}</span>
+            {% endif %}
+
+            {% if product.sku %}
+              <span class="ec-product-card__sku">SKU: {{ product.sku }}</span>
+            {% endif %}
+          </div>
+
+          <a href="/node/{{ product.product_id }}"
+             class="ec-product-card__btn ec-add-to-cart"
+             data-product-id="{{ product.product_id }}">
+            {{ 'View Product'|t }}
+          </a>
+
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+</div>

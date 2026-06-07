@@ -1,0 +1,7 @@
+ai_provider_groq.settings_form:
+  path: '/admin/config/ai/providers/groq'
+  defaults:
+    _form: '\Drupal\ai_provider_groq\Form\GroqConfigForm'
+    _title: 'Groq AI Provider Settings'
+  requirements:
+    _permission: 'administer ai providers'
